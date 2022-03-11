@@ -8,13 +8,15 @@ BOOT_FLAGS =
 
 KERNEL_DIR = ./kernel
 ASMKERNEL_FLAGS = -f win32
-CKERNEL_FLAGS = -c -ffreestanding -m32
+CKERNEL_FLAGS = -c -I./kernel/include -ffreestanding -m32
 
+KERNEL_SOURCES = $(wildcard ${KERNEL_DIR}/*.c ${KERNEL_DIR}/*.s)
+KERNEL_OBJ = $(addprefix ${BINARY_DIR}/, $(notdir $(patsubst %.s,%.o,$(patsubst %.c,%.o,${KERNEL_SOURCES}))))
 
 ${BINARY_DIR}/image.bin : ${BINARY_DIR}/bootloader.bin ${BINARY_DIR}/kernel.bin
 	cat ${BINARY_DIR}/bootloader.bin ${BINARY_DIR}/kernel.bin > ${BINARY_DIR}/image.bin
 
-${BINARY_DIR}/kernel.bin : ${BINARY_DIR}/kernel_entry.o ${BINARY_DIR}/kernel_main.o
+${BINARY_DIR}/kernel.bin : ${KERNEL_OBJ}
 	ld -o${BINARY_DIR}/kernel.tmp -T./link/script.ld $^
 	objcopy -O binary ${BINARY_DIR}/kernel.tmp $@
 	-rm ${BINARY_DIR}/*.tmp
